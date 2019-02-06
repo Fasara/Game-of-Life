@@ -1,0 +1,218 @@
+<button id="runTurn" onclick="runTurn()">
+	Run
+</button>
+
+<table id="grid">
+	<tbody>
+		<!-- grid will be drawn in here -->
+	</tbody>
+</table>
+
+<style type="text/css">
+	#grid td {
+		width: 50px;
+		height: 50px;
+		background-color: #bbb;
+	}
+
+	#grid td.alive {
+		background-color: green;
+	}
+</style>
+
+<script type="text/javascript">
+
+	//
+	// these are needed so the checkXYCoordinatesAreValid function knows how big the grid is
+	// this can be swapped to be dynamic later
+	//
+	var gridSizeX = 3;
+	var gridSizeY = 3;
+
+	//
+	// an array holding the cell values for the game board
+	//
+	var grid = [
+		[
+			'dead',
+			'dead',
+			'dead',
+		],
+		[
+			'alive',
+			'alive',
+			'alive',
+		],
+		[
+			'dead',
+			'dead',
+			'dead',
+		],
+	];
+
+	// console.log(grid);
+
+	drawGrid(grid);
+
+	function drawGrid() {
+
+		var gridHtml = "";
+
+		//
+		// loop over every row
+		//
+		for (let y = 0; y < grid.length; y++) {
+
+			gridHtml += "<tr>";
+
+		 	var row = getRow(y);
+
+		 	//
+		 	// loop over every cell
+		 	//
+		 	for (let x = 0; x < row.length; x++) {
+		 		var cell = getCell(x, y);
+
+	 			var cellClass = "";
+
+	 			if (cell === "alive") {
+	 				cellClass = "alive";
+	 			}
+
+		 		gridHtml += '<td class="' + cellClass + '"></td>';
+
+		 	}
+
+		 	gridHtml += "</tr>";
+
+		}
+
+		//
+		// replace table body html with new grid
+		//
+		document.querySelector('#grid tbody').innerHTML = gridHtml;
+	}
+
+	var count = 0;
+	//
+	// start a turn
+	//
+	function runTurn() {
+
+		//
+		// an array holding the cell values for what the game board will
+		// look like next turn
+		//
+		let nextTurnGrid = [];
+
+		//
+		// loop over every row
+		//
+		for (let y = 0; y < grid.length; y++) {
+
+		 	var row = getRow(y);
+
+		 	nextTurnGrid.push([]);
+
+		 	//
+		 	// loop over every cell
+		 	//
+		 	for (let x = 0; x < row.length; x++) {
+
+		 		let cell = getCell(x,y);
+		 		let neighbourCount = getAliveNeighbourCountForCell(x, y);
+
+		 		//
+		 		// calculate whether the cell should be alive or dead
+		 		//
+		 		if (cell == 'alive') {
+					if (neighbourCount < 2) {
+			 			cell = 'dead';
+			 		} else if (neighbourCount <= 3) {
+			 			cell = 'alive';
+			 		} else if (neighbourCount > 3) {
+			 			cell = 'dead';
+			 		}
+		 		} else {
+					if (neighbourCount === 3) {
+			 			cell = 'alive';
+			 		}
+		 		}
+
+		 		//
+		 		// updates the value of the cell for the next turn
+		 		//
+		 		nextTurnGrid[y][x] = cell;
+		 			
+		 	}
+
+		}
+
+		grid = nextTurnGrid;
+
+		drawGrid();
+	}
+	
+	function getRow(y) {
+		return grid[y];
+	}
+
+
+	function getCell(x, y) {
+		return grid[y][x];
+	}
+
+	// 
+	// counting the neighbours
+	// 
+	function getAliveNeighbourCountForCell(x, y) {
+
+		let neighbourCount = 0;
+
+		//
+		// list of neighbours needs to be checked
+		//
+		let combinationsToCheck = [
+			[x-1, y-1],
+			[x, y-1],
+			[x+1, y-1],
+			[x-1, y],
+			[x+1, y],
+			[x-1, y+1],
+			[x, y+1],
+			[x+1, y+1],
+		];
+
+		//
+		// loop over the combinations to check
+		// and check if the combinations are valid 
+		// and if the cells are alive it increases the neighbours count
+		//
+		for (let i = 0; i < combinationsToCheck.length; i++) {
+
+			let xToCheck = combinationsToCheck[i][0];
+			let yToCheck = combinationsToCheck[i][1];
+
+			if (
+				checkXYCoordinatesAreValid(xToCheck, yToCheck) 
+			) {
+		 		if (getCell(xToCheck, yToCheck) == 'alive') {
+		 			neighbourCount++;
+		 		}
+			}
+		}
+
+ 		return neighbourCount;
+	}
+
+	//
+	// check the cell is inside the grid
+	//
+	function checkXYCoordinatesAreValid(x, y) {
+		if (x < 0 || x > gridSizeX - 1 || y < 0 || y > gridSizeY - 1) {
+			return false;
+		}
+
+		return true;
+	}
+</script>
